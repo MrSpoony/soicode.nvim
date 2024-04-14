@@ -98,18 +98,21 @@ function Soicode.get_samples()
     local toml = io.open(file, "r"):read("a")
     D.log("info", toml)
     local parsed = require("soicode.toml").parse(toml)
-    D.print("info", "%v", parsed)
-    if parsed.samples == nil then
+    D.tprint(parsed)
+    D.tprint(parsed.sample)
+    if parsed.sample == nil then
         return {}
     end
     local samples = {}
-    for key, sample in ipairs(parsed.samples) do
-        D.log("info", "%s, %v", key, sample)
+    for key, sample in pairs(parsed.sample) do
+        D.log("info", "%s", key)
+        D.tprint(sample)
         local s = {
             name = "sample." .. key,
             input = sample.input,
             output = sample.output,
         }
+        D.tprint(sample)
         table.insert(samples, s)
     end
     return samples
