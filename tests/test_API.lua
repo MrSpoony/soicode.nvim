@@ -32,9 +32,7 @@ T["setup()"]["sets exposed methods and default options value"] = function()
     eq_type_global(child, "_G.Soicode", "table")
 
     -- public methods
-    eq_type_global(child, "_G.Soicode.toggle", "function")
-    eq_type_global(child, "_G.Soicode.disable", "function")
-    eq_type_global(child, "_G.Soicode.enable", "function")
+    eq_type_global(child, "_G.Soicode.compile", "function")
 
     -- config
     eq_type_global(child, "_G.Soicode.config", "table")

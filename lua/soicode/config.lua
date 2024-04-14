@@ -7,6 +7,12 @@ local Soicode = {}
 Soicode.options = {
     -- Prints useful logs about what event are triggered, and reasons actions are executed.
     debug = false,
+    -- Compiler to use
+    compiler = "g++",
+    -- Additional flags
+    flags = "-Wall -Wextra -fdiagnostics-color=never -std=c++20 -O2",
+    -- Use the soi header
+    soi_header = true
 }
 
 --- Define your soicode setup.

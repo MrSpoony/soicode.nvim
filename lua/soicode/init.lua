@@ -1,35 +1,24 @@
 local M = require("soicode.main")
 local Soicode = {}
 
--- Toggle the plugin by calling the `enable`/`disable` methods respectively.
-function Soicode.toggle()
-    -- when the config is not set to the global object, we set it
+-- Compile the c++ file you are currently in, or the corresponding file from the stoml file you currently have open.
+function Soicode.compile()
     if _G.Soicode.config == nil then
         _G.Soicode.config = require("soicode.config").options
     end
 
-    _G.Soicode.state = M.toggle()
+     M.compile()
 end
 
--- starts Soicode and set internal functions and state.
-function Soicode.enable()
+-- Get the samples from the current file, or the corresponding stoml file.
+function Soicode.get_samples()
     if _G.Soicode.config == nil then
         _G.Soicode.config = require("soicode.config").options
     end
 
-    local state = M.enable()
-
-    if state ~= nil then
-        _G.Soicode.state = state
-    end
-
-    return state
+    return M.get_samples()
 end
 
--- disables Soicode and reset internal functions and state.
-function Soicode.disable()
-    _G.Soicode.state = M.disable()
-end
 
 -- setup Soicode options and merge them with user provided ones.
 function Soicode.setup(opts)
