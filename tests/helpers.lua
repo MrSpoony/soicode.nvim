@@ -5,8 +5,8 @@ local Helpers = {}
 Helpers.expect = vim.deepcopy(MiniTest.expect)
 
 -- The error message returned when a test fails.
-local function errorMessage(str, pattern)
-    return string.format("Pattern: %s\nObserved string: %s", vim.inspect(pattern), str)
+local function errorMessage(got, expected)
+    return string.format("Expected: %s\nGot: %s", vim.inspect(expected), vim.inspect(got))
 end
 
 -- Check equality of a global `field` against `value` in the given `child` process.
@@ -84,6 +84,31 @@ end, errorMessage)
 Helpers.expect.no_match = MiniTest.new_expectation("no string matching", function(str, pattern)
     return str:find(pattern) == nil
 end, errorMessage)
+
+Helpers.expect.list_elements_match = MiniTest.new_expectation(
+    "list elements matching",
+    function(list1, list2)
+        if #list1 ~= #list2 then
+            return false
+        end
+
+        for _, v in ipairs(list1) do
+            local is_there = false
+            for _, w in ipairs(list2) do
+                if vim.deep_equal(v, w) then
+                    is_there = true
+                    break
+                end
+            end
+            if not is_there then
+                return false
+            end
+        end
+
+        return true
+    end,
+    errorMessage
+)
 
 -- Monkey-patch `MiniTest.new_child_neovim` with helpful wrappers
 Helpers.new_child_neovim = function()

@@ -33,6 +33,7 @@ T["setup()"]["sets exposed methods and default options value"] = function()
 
     -- public methods
     eq_type_global(child, "_G.Soicode.compile", "function")
+    eq_type_global(child, "_G.Soicode.get_samples", "function")
 
     -- config
     eq_type_global(child, "_G.Soicode.config", "table")
@@ -51,6 +52,26 @@ T["setup()"]["overrides default values"] = function()
     -- assert the value, and the type
     eq_config(child, "debug", true)
     eq_type_config(child, "debug", "boolean")
+end
+
+T["get_samples()"] = MiniTest.new_set()
+
+T["get_samples()"]["can parse the .stoml samples"] = function()
+    child.cmd("edit tests/testfiles/test.stoml")
+    child.lua("require('soicode').setup({debug=true})")
+    local samples = child.lua_get("require('soicode').get_samples()")
+    helpers.expect.list_elements_match(samples, {
+        {
+            name = "sample.01",
+            input = "5 0\n",
+            output = "5\n",
+        },
+        {
+            name = "sample.02",
+            input = "5 3\n0 1\n1 2\n2 3\n",
+            output = "3\n",
+        },
+    })
 end
 
 return T
