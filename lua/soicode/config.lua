@@ -12,7 +12,7 @@ Soicode.options = {
     -- Additional flags
     flags = "-Wall -Wextra -fdiagnostics-color=never -std=c++20 -O2",
     -- Use the soi header
-    soi_header = true
+    soi_header = true,
 }
 
 --- Define your soicode setup.

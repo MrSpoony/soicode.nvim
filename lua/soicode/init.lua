@@ -7,7 +7,7 @@ function Soicode.compile()
         _G.Soicode.config = require("soicode.config").options
     end
 
-     M.compile()
+    M.compile()
 end
 
 -- Get the samples from the current file, or the corresponding stoml file.
@@ -18,7 +18,6 @@ function Soicode.get_samples()
 
     return M.get_samples()
 end
-
 
 -- setup Soicode options and merge them with user provided ones.
 function Soicode.setup(opts)

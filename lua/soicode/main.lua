@@ -25,20 +25,20 @@ function Soicode.compile()
     local compiler = require("soicode.config").options.compiler
     local errormessage = ""
     local j = require("plenary.job"):new({
-            command = compiler,
-            args = args,
-            on_stdout = function(_, data)
-                D.log("info", "Got stdout: %s", data)
-            end,
-            on_stderr = function(_, data)
-                D.log("info", "Got stderr: %s", data)
-                errormessage = errormessage .. data .. "\n"
-            end,
-        })
+        command = compiler,
+        args = args,
+        on_stdout = function(_, data)
+            D.log("info", "Got stdout: %s", data)
+        end,
+        on_stderr = function(_, data)
+            D.log("info", "Got stderr: %s", data)
+            errormessage = errormessage .. data .. "\n"
+        end,
+    })
     D.log("info", "Compiling with command: %s, args: %s", compiler, table.concat(args, " "))
     local _, code = j:sync()
     if code ~= 0 then
-        vim.notify(errormessage, "error", { title = "Compilation failed"})
+        vim.notify(errormessage, "error", { title = "Compilation failed" })
     end
 end
 
@@ -49,11 +49,12 @@ function Soicode.get_current_cpp_filepath()
     local prefix = vim.fn.expand("%:p:r")
     local files = vim.fn.glob(prefix .. ".*", false, true)
     for _, file in ipairs(files) do
-        if string.match(file, "%.cpp$")
+        if
+            string.match(file, "%.cpp$")
             or string.match(file, "%.cc$")
             or string.match(file, "%.c$")
             or string.match(file, "%.cxx$")
-            then
+        then
             D.log("info", "Using file: %s", file)
             return file
         end
@@ -69,10 +70,11 @@ function Soicode.get_current_stoml_filepath()
     local prefix = vim.fn.expand("%:p:r")
     local files = vim.fn.glob(prefix .. ".*", false, true)
     for _, file in ipairs(files) do
-        if string.match(file, "%.stoml$")
+        if
+            string.match(file, "%.stoml$")
             or string.match(file, "%.toml$")
             or string.match(file, "%.soitask$")
-            then
+        then
             D.log("info", "Using file: %s", file)
             return file
         end
