@@ -3,6 +3,8 @@ local D = require("soicode.util.debug")
 -- internal methods
 local Soicode = {}
 
+local TLE_EXIT_CODE = 78535
+
 ---@class Sample
 ---@field name string The name of the sample.
 ---@field input string The input given to the sample.
@@ -16,7 +18,7 @@ local Soicode = {}
 ---@field verdict "OK"|"WA"|"TLE"|"RE" The verdict of the sample.
 ---@field sample Sample The sample the Verdict corresponds to.
 ---@field output OutputLine[] The output lines of the execution.
----@field exitcode number The exit code of the execution.
+---@field exitcode number|nil The exit code of the execution, is nil when verdict is "TLE".
 
 ---Compiles the current file.
 ---@private
@@ -51,7 +53,7 @@ function Soicode.compile()
         end,
     })
     D.log("info", "Compiling with command: %s %s", compiler, table.concat(args, " "))
-    local _, code = j:sync()
+    local _, code = j:sync(10000)
     if code ~= 0 then
         vim.notify(errormessage, "error", { title = "Compilation failed" })
     end
@@ -137,20 +139,18 @@ end
 function Soicode.run_sample(sample)
     local executable = vim.fn.expand("%:p:r")
     local output = {}
-    local command = "timeout"
-    local args = { _G.Soicode.config.timeout_ms / 1000, executable }
+    local timeout = _G.Soicode.config.timeout_ms
     if
         _G.Soicode.config.timeout_ms == nil
         or _G.Soicode.config.timeout_ms == 0
         or _G.Soicode.config.timeout_ms == -1
         or _G.Soicode.config.timeout_ms == false
     then
-        command = executable
-        args = {}
+        timeout = 1000 * 60 * 60 * 24
     end
     local j = require("plenary.job"):new({
-        command = command,
-        args = args,
+        command = executable,
+        args = {},
         writer = sample.input,
         on_stdout = function(_, data)
             D.log("info", "Stdout: %s", data)
@@ -165,11 +165,18 @@ function Soicode.run_sample(sample)
             end
         end,
     })
-    D.log("info", "Running with command: %s, args: %s", command, table.concat(args, " "))
+    D.log("info", "Running command: %s", executable)
     D.log("info", "Writing input: %s", sample.input)
-    local _, code = j:sync()
+    local status, err = pcall(function()
+        j:sync(timeout)
+    end)
+    local code = j.code
+    local is_tle = false
+    if not status then
+        is_tle = true
+    end
     D.log("info", "Exit code: %s", code)
-    return Soicode.check_sample(sample, output, code)
+    return Soicode.check_sample(sample, output, code, is_tle)
 end
 
 local function trim(s)
@@ -193,9 +200,10 @@ end
 ---@param sample Sample The sample to check.
 ---@param output OutputLine[] The output of the execution.
 ---@param code number The exit code of the execution
+---@param is_tle boolean Whether the execution was a TLE.
 ---@return Verdict verdict The veridct of the sample.
 ---@private
-function Soicode.check_sample(sample, output, code)
+function Soicode.check_sample(sample, output, code, is_tle)
     local verdict = "OK"
 
     local sample_lines = split(trim(sample.output), "\n")
@@ -224,8 +232,8 @@ function Soicode.check_sample(sample, output, code)
         verdict = "RE"
     end
 
-    -- Error codes take precedence
-    if code == 124 then
+    -- Error codes and TLE take precedence
+    if is_tle then
         verdict = "TLE"
         goto ret
     elseif code ~= 0 then

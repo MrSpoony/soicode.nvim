@@ -146,7 +146,6 @@ T["run_sample()"]["can detect correct TLE"] = function()
     local verdict = child.lua_get([[
         require('soicode').run_sample({ name='sample.01', input='420 2\n', output='5\n' })
     ]])
-    eq(verdict.exitcode, 124)
     eq(verdict.verdict, "TLE")
 end
 
