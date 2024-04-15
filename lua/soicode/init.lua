@@ -25,6 +25,19 @@ function Soicode.get_samples()
     return M.get_samples()
 end
 
+---Run the sample. Make sure the c++ file got compiled before running a sample.
+---@param sample Sample The sample to run.
+---@return Verdict verdict The verdict of the sample.
+---
+---@usage `require("soicode").run_sample({name="sample.01", inupt="1 2", output="3"})`
+function Soicode.run_sample(sample)
+    if _G.Soicode.config == nil then
+        _G.Soicode.config = require("soicode.config").options
+    end
+
+    return M.run_sample(sample)
+end
+
 -- setup Soicode options and merge them with user provided ones.
 function Soicode.setup(opts)
     _G.Soicode.config = require("soicode.config").setup(opts)

@@ -13,6 +13,8 @@ Soicode.options = {
     flags = "-Wall -Wextra -fdiagnostics-color=never -std=c++20 -O2",
     -- Use the soi header
     soi_header = true,
+    -- Timeout for TLE in milliseconds, 0, nil, false or -1 to disable
+    timeout_ms = 1000,
 }
 
 --- Define your soicode setup.

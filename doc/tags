@@ -1,4 +1,5 @@
 Soicode.compile()	soicode.txt	/*Soicode.compile()*
 Soicode.get_samples()	soicode.txt	/*Soicode.get_samples()*
 Soicode.options	soicode.txt	/*Soicode.options*
+Soicode.run_sample()	soicode.txt	/*Soicode.run_sample()*
 Soicode.setup()	soicode.txt	/*Soicode.setup()*

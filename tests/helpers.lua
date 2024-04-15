@@ -9,8 +9,8 @@ local function errorMessage(got, expected)
     return string.format("Expected: %s\nGot: %s", vim.inspect(expected), vim.inspect(got))
 end
 
--- Check equality of a global `field` against `value` in the given `child` process.
--- @usage global_equality(child, "_G.SoicodeLoaded", true)
+---Check equality of a global `field` against `value` in the given `child` process.
+---@usage global_equality(child, "_G.SoicodeLoaded", true)
 Helpers.expect.global_equality = MiniTest.new_expectation(
     "variable in child process matches",
     function(child, field, value)
@@ -19,8 +19,8 @@ Helpers.expect.global_equality = MiniTest.new_expectation(
     errorMessage
 )
 
--- Check type equality of a global `field` against `value` in the given `child` process.
--- @usage global_type_equality(child, "_G.SoicodeLoaded", "boolean")
+---Check type equality of a global `field` against `value` in the given `child` process.
+---@usage global_type_equality(child, "_G.SoicodeLoaded", "boolean")
 Helpers.expect.global_type_equality = MiniTest.new_expectation(
     "variable type in child process matches",
     function(child, field, value)
@@ -29,8 +29,8 @@ Helpers.expect.global_type_equality = MiniTest.new_expectation(
     errorMessage
 )
 
--- Check equality of a config `field` against `value` in the given `child` process.
--- @usage option_equality(child, "debug", true)
+---Check equality of a config `field` against `value` in the given `child` process.
+---@usage option_equality(child, "debug", true)
 Helpers.expect.config_equality = MiniTest.new_expectation(
     "config option matches",
     function(child, field, value)
@@ -39,8 +39,8 @@ Helpers.expect.config_equality = MiniTest.new_expectation(
     errorMessage
 )
 
--- Check type equality of a config `field` against `value` in the given `child` process.
--- @usage config_type_equality(child, "debug", "boolean")
+---Check type equality of a config `field` against `value` in the given `child` process.
+---@usage config_type_equality(child, "debug", "boolean")
 Helpers.expect.config_type_equality = MiniTest.new_expectation(
     "config option type matches",
     function(child, field, value)
@@ -53,8 +53,8 @@ Helpers.expect.config_type_equality = MiniTest.new_expectation(
     errorMessage
 )
 
--- Check equality of a state `field` against `value` in the given `child` process.
--- @usage state_equality(child, "enabled", true)
+---Check equality of a state `field` against `value` in the given `child` process.
+---@usage state_equality(child, "enabled", true)
 Helpers.expect.state_equality = MiniTest.new_expectation(
     "state matches",
     function(child, field, value)
@@ -63,8 +63,8 @@ Helpers.expect.state_equality = MiniTest.new_expectation(
     errorMessage
 )
 
--- Check type equality of a state `field` against `value` in the given `child` process.
--- @usage state_type_equality(child, "enabled", "boolean")
+---Check type equality of a state `field` against `value` in the given `child` process.
+---@usage state_type_equality(child, "enabled", "boolean")
 Helpers.expect.state_type_equality = MiniTest.new_expectation(
     "state type matches",
     function(child, field, value)

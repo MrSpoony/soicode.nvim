@@ -3,12 +3,10 @@ local helpers = dofile("tests/helpers.lua")
 -- See https://github.com/echasnovski/mini.nvim/blob/main/lua/mini/test.lua for more documentation
 
 local child = helpers.new_child_neovim()
-local eq_global, eq_config, eq_state =
-    helpers.expect.global_equality, helpers.expect.config_equality, helpers.expect.state_equality
-local eq_type_global, eq_type_config, eq_type_state =
-    helpers.expect.global_type_equality,
-    helpers.expect.config_type_equality,
-    helpers.expect.state_type_equality
+local eq_config = helpers.expect.config_equality
+local eq_type_global, eq_type_config =
+    helpers.expect.global_type_equality, helpers.expect.config_type_equality
+local expect, eq = helpers.expect, helpers.expect.equality
 
 local T = MiniTest.new_set({
     hooks = {
@@ -66,7 +64,7 @@ T["compile()"]["should compile"] = function()
     child.cmd("edit tests/testfiles/shouldcompile.cpp")
     child.lua("require('soicode').compile()")
     local messages = child.lua_get("_G.messages")
-    helpers.expect.equality(messages, {});
+    eq(messages, {})
 end
 
 T["compile()"]["should not compile"] = function()
@@ -79,7 +77,7 @@ T["compile()"]["should not compile"] = function()
     child.cmd("edit tests/testfiles/shouldfail.cpp")
     child.lua("require('soicode').compile()")
     local messages = child.lua_get("_G.messages")
-    helpers.expect.equality(#messages, 1);
+    eq(#messages, 1)
 end
 
 T["get_samples()"] = MiniTest.new_set()
@@ -87,7 +85,7 @@ T["get_samples()"] = MiniTest.new_set()
 T["get_samples()"]["can parse the .stoml samples"] = function()
     child.cmd("edit tests/testfiles/test.stoml")
     local samples = child.lua_get("require('soicode').get_samples()")
-    helpers.expect.list_elements_match(samples, {
+    expect.list_elements_match(samples, {
         {
             name = "sample.01",
             input = "5 0\n",
@@ -99,6 +97,57 @@ T["get_samples()"]["can parse the .stoml samples"] = function()
             output = "3\n",
         },
     })
+end
+
+T["run_sample()"] = MiniTest.new_set({
+    hooks = {
+        pre_once = function()
+            child.cmd("edit tests/testfiles/addition.cpp")
+            child.lua("require('soicode').compile()")
+        end,
+        pre_case = function()
+            child.cmd("edit tests/testfiles/addition.cpp")
+        end,
+    },
+})
+
+T["run_sample()"]["can run a sample sucessfully"] = function()
+    local verdict = child.lua_get([[
+        require('soicode').run_sample({ name='sample.01', input='2 3\n', output='5\n' })
+    ]])
+    eq(verdict.exitcode, 0)
+    eq(verdict.verdict, "OK")
+end
+
+T["run_sample()"]["can detect correct WA"] = function()
+    local verdict = child.lua_get([[
+        require('soicode').run_sample({ name='sample.01', input='200000000000 3\n', output='5\n' })
+    ]])
+    eq(verdict.exitcode, 0)
+    eq(verdict.verdict, "WA")
+end
+
+T["run_sample()"]["can detect correct RE on exitcode"] = function()
+    local verdict = child.lua_get([[
+        require('soicode').run_sample({ name='sample.01', input='69 2\n', output='5\n' })
+    ]])
+    eq(verdict.exitcode, 1)
+    eq(verdict.verdict, "RE")
+end
+
+T["run_sample()"]["can detect correct RE on assert"] = function()
+    local verdict = child.lua_get([[
+        require('soicode').run_sample({ name='sample.01', input='6969 2\n', output='5\n' })
+    ]])
+    eq(verdict.verdict, "RE")
+end
+
+T["run_sample()"]["can detect correct TLE"] = function()
+    local verdict = child.lua_get([[
+        require('soicode').run_sample({ name='sample.01', input='420 2\n', output='5\n' })
+    ]])
+    eq(verdict.exitcode, 124)
+    eq(verdict.verdict, "TLE")
 end
 
 return T

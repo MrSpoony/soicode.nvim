@@ -3,6 +3,21 @@ local D = require("soicode.util.debug")
 -- internal methods
 local Soicode = {}
 
+---@class Sample
+---@field name string The name of the sample.
+---@field input string The input given to the sample.
+---@field output string The expected output.
+
+---@class OutputLine This describes a line of output
+---@field data string The actual line printed
+---@field stdout boolean Whether the line was printed to stdout or stderr.
+
+---@class Verdict
+---@field verdict "OK"|"WA"|"TLE"|"RE" The verdict of the sample.
+---@field sample Sample The sample the Verdict corresponds to.
+---@field output OutputLine[] The output lines of the execution.
+---@field exitcode number The exit code of the execution.
+
 ---Compiles the current file.
 ---@private
 function Soicode.compile()
@@ -35,7 +50,7 @@ function Soicode.compile()
             errormessage = errormessage .. data .. "\n"
         end,
     })
-    D.log("info", "Compiling with command: %s, args: %s", compiler, table.concat(args, " "))
+    D.log("info", "Compiling with command: %s %s", compiler, table.concat(args, " "))
     local _, code = j:sync()
     if code ~= 0 then
         vim.notify(errormessage, "error", { title = "Compilation failed" })
@@ -83,11 +98,6 @@ function Soicode.get_current_stoml_filepath()
     return nil
 end
 
----@class Sample
----@field name string
----@field input string
----@field output string
-
 ---Get samples from the current file.
 ---@return Sample[]|nil samples The samples from the current file or nil in case of an error.
 ---@private
@@ -118,6 +128,118 @@ function Soicode.get_samples()
         table.insert(samples, s)
     end
     return samples
+end
+
+---Run the sample. Make sure the c++ file got compiled before running a sample.
+---@param sample Sample The sample to run.
+---@return Verdict verdict The verdict of the sample.
+---@private
+function Soicode.run_sample(sample)
+    local executable = vim.fn.expand("%:p:r")
+    local output = {}
+    local command = "timeout"
+    local args = { _G.Soicode.config.timeout_ms / 1000, executable }
+    if
+        _G.Soicode.config.timeout_ms == nil
+        or _G.Soicode.config.timeout_ms == 0
+        or _G.Soicode.config.timeout_ms == -1
+        or _G.Soicode.config.timeout_ms == false
+    then
+        command = executable
+        args = {}
+    end
+    local j = require("plenary.job"):new({
+        command = command,
+        args = args,
+        writer = sample.input,
+        on_stdout = function(_, data)
+            D.log("info", "Stdout: %s", data)
+            if data ~= "" then
+                table.insert(output, { data = data, stdout = true })
+            end
+        end,
+        on_stderr = function(_, data)
+            D.log("info", "Stderr: %s", data)
+            if data ~= "" then
+                table.insert(output, { data = data, stdout = false })
+            end
+        end,
+    })
+    D.log("info", "Running with command: %s, args: %s", command, table.concat(args, " "))
+    D.log("info", "Writing input: %s", sample.input)
+    local _, code = j:sync()
+    D.log("info", "Exit code: %s", code)
+    return Soicode.check_sample(sample, output, code)
+end
+
+local function trim(s)
+    return s:match("^%s*(.-)%s*$")
+end
+
+local function split(str, delimiter)
+    local result = {}
+    local from = 1
+    local delim_from, delim_to = string.find(str, delimiter, from)
+    while delim_from do
+        table.insert(result, string.sub(str, from, delim_from - 1))
+        from = delim_to + 1
+        delim_from, delim_to = string.find(str, delimiter, from)
+    end
+    table.insert(result, string.sub(str, from))
+    return result
+end
+
+---Check the sample
+---@param sample Sample The sample to check.
+---@param output OutputLine[] The output of the execution.
+---@param code number The exit code of the execution
+---@return Verdict verdict The veridct of the sample.
+---@private
+function Soicode.check_sample(sample, output, code)
+    local verdict = "OK"
+
+    local sample_lines = split(trim(sample.output), "\n")
+    local sample_line = 1
+    local has_error = false
+    for _, line in ipairs(output) do
+        if line.stdout then
+            if #sample_lines < sample_line then
+                verdict = "WA"
+                break
+            end
+            if trim(line.data) ~= trim(sample_lines[sample_line]) then
+                verdict = "WA"
+            end
+            sample_line = sample_line + 1
+        else
+            has_error = true
+        end
+    end
+
+    if sample_line ~= #sample_lines + 1 then
+        verdict = "WA"
+    end
+
+    if verdict == "WA" and has_error then
+        verdict = "RE"
+    end
+
+    -- Error codes take precedence
+    if code == 124 then
+        verdict = "TLE"
+        goto ret
+    elseif code ~= 0 then
+        verdict = "RE"
+        goto ret
+    end
+
+    ::ret::
+    return {
+        verdict = verdict,
+        sample = sample,
+        output = output,
+        exitcode = code,
+    }
 end
 
 return Soicode
