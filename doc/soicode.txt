@@ -1,5 +1,26 @@
 ==============================================================================
 ------------------------------------------------------------------------------
+                                                             *Soicode.compile()*
+                              `Soicode.compile`()
+Compile the c++ file you are currently in, or the corresponding file from the stoml file you currently have open.
+
+Usage ~
+`require("soicode").compile()`
+
+------------------------------------------------------------------------------
+                                                         *Soicode.get_samples()*
+                            `Soicode.get_samples`()
+Get the samples from the current file, or the corresponding stoml file.
+
+Return ~
+`(Sample[]|nil)` samples The samples from the current file or nil in case of an error.
+
+Usage ~
+`require("soicode").get_samples()`
+
+
+==============================================================================
+------------------------------------------------------------------------------
                                                                *Soicode.options*
                                `Soicode.options`
 Your plugin configuration with its default values.

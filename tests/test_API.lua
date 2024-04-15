@@ -54,11 +54,38 @@ T["setup()"]["overrides default values"] = function()
     eq_type_config(child, "debug", "boolean")
 end
 
+T["compile()"] = MiniTest.new_set()
+
+T["compile()"]["should compile"] = function()
+    child.lua([[
+    _G.messages = {}
+    vim.notify = function(msg, level, opts)
+        table.insert(_G.messages, {msg=msg, level=level, opts=opts})
+    end
+    ]])
+    child.cmd("edit tests/testfiles/shouldcompile.cpp")
+    child.lua("require('soicode').compile()")
+    local messages = child.lua_get("_G.messages")
+    helpers.expect.equality(messages, {});
+end
+
+T["compile()"]["should not compile"] = function()
+    child.lua([[
+    _G.messages = {}
+    vim.notify = function(msg, level, opts)
+        table.insert(_G.messages, {msg=msg, level=level, opts=opts})
+    end
+    ]])
+    child.cmd("edit tests/testfiles/shouldfail.cpp")
+    child.lua("require('soicode').compile()")
+    local messages = child.lua_get("_G.messages")
+    helpers.expect.equality(#messages, 1);
+end
+
 T["get_samples()"] = MiniTest.new_set()
 
 T["get_samples()"]["can parse the .stoml samples"] = function()
     child.cmd("edit tests/testfiles/test.stoml")
-    child.lua("require('soicode').setup({debug=true})")
     local samples = child.lua_get("require('soicode').get_samples()")
     helpers.expect.list_elements_match(samples, {
         {

@@ -11,9 +11,11 @@ test:
 		-c "lua MiniTest.run({ execute = { reporter = MiniTest.gen_reporter.stdout({ group_depth = 1 }) } })"
 
 # installs `mini.nvim`, used for both the tests and documentation.
+# and installs dependency `plenary.nvim`
 deps:
 	@mkdir -p deps
 	git clone --depth 1 https://github.com/echasnovski/mini.nvim deps/mini.nvim
+	git clone --depth 1 https://github.com/nvim-lua/plenary.nvim deps/plenary.nvim
 
 # installs deps before running tests, useful for the CI.
 test-ci: deps test
@@ -28,3 +30,6 @@ documentation-ci: deps documentation
 # performs a lint check and fixes issue if possible, following the config in `stylua.toml`.
 lint:
 	stylua .
+
+clean:
+	rm -rf deps
