@@ -4,8 +4,8 @@
 
 <p align="center">
   Implementation of the soicode
-[vscode plugin](https://marketplace.visualstudio.com/items?itemName=swissolyinfo.soicode)
-made for the [Swiss Olympiad in Informatics](https://soi.ch).
+  <a href="https://marketplace.visualstudio.com/items?itemName=swissolyinfo.soicode">vscode plugin</a>
+made for the <a href="https://soi.ch">Swiss Olympiad in Informatics</a>.
 inside of neovim.
 </p>
 
@@ -39,23 +39,6 @@ check your documentation for this.
 <tr>
 <td>
 
-[wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim)
-
-</td>
-<td>
-
-```lua
--- stable version
-use {"soicode.nvim", tag = "*", run = "./install.sh"}
--- dev version
-use {"soicode.nvim", run = "./install.sh"}
-```
-
-</td>
-</tr>
-<tr>
-<td>
-
 [folke/lazy.nvim](https://github.com/folke/lazy.nvim)
 
 </td>
@@ -63,9 +46,54 @@ use {"soicode.nvim", run = "./install.sh"}
 
 ```lua
 -- stable version
-require("lazy").setup({{"soicode.nvim", version = "*", build = "./install.sh"}})
+require("lazy").setup({
+    {
+        "soicode.nvim",
+        version = "*",
+        build = "./install.sh"
+        dependencies = {
+            "nvim-lua/plenary.nvim"
+            -- "rcarriga/nvim-notify" -- Opitonal for pretty notifications
+        }
+    },
+})
 -- dev version
-require("lazy").setup({"soicode.nvim", build = "./install.sh"})
+require("lazy").setup({
+    {
+        "soicode.nvim",
+        build = "./install.sh"
+        dependencies = {
+            "nvim-lua/plenary.nvim"
+            -- "rcarriga/nvim-notify" -- Opitonal for pretty notifications
+        }
+    },
+})
+```
+
+</td>
+</tr>
+<tr>
+<td>
+
+[wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim)
+
+</td>
+<td>
+
+```lua
+-- stable version
+use {
+    "soicode.nvim",
+    tag = "*",
+    run = "./install.sh",
+    requires = { {"nvim-lua/plenary.nvim"}, {"rcarriga/nvim-notify"} }
+}
+-- dev version
+use {
+    "soicode.nvim",
+    run = "./install.sh",
+    requires = { {"nvim-lua/plenary.nvim"}, {"rcarriga/nvim-notify"} }
+}
 ```
 
 </td>
