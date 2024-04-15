@@ -3,8 +3,6 @@ local D = require("soicode.util.debug")
 -- internal methods
 local Soicode = {}
 
-local TLE_EXIT_CODE = 78535
-
 ---@class Sample
 ---@field name string The name of the sample.
 ---@field input string The input given to the sample.
@@ -53,7 +51,22 @@ function Soicode.compile()
         end,
     })
     D.log("info", "Compiling with command: %s %s", compiler, table.concat(args, " "))
-    local _, code = j:sync(10000)
+    local timeout = _G.Soicode.config.compilation_timeout_ms
+    if
+        _G.Soicode.config.compilation_timeout_ms == nil
+        or _G.Soicode.config.compilation_timeout_ms == 0
+        or _G.Soicode.config.compilation_timeout_ms == -1
+        or _G.Soicode.config.compilation_timeout_ms == false
+    then
+        timeout = 1000 * 60 * 60 * 24
+    end
+    local status, err = pcall(function()
+        j:sync(timeout)
+    end)
+    local code = j.code
+    if not status then
+        error(err)
+    end
     if code ~= 0 then
         vim.notify(errormessage, "error", { title = "Compilation failed" })
     end
@@ -172,8 +185,10 @@ function Soicode.run_sample(sample)
     end)
     local code = j.code
     local is_tle = false
-    if not status then
+    if not status and err ~= nil and err:match("was unable to complete in") ~= nil then
         is_tle = true
+    elseif not status then
+        error(err)
     end
     D.log("info", "Exit code: %s", code)
     return Soicode.check_sample(sample, output, code, is_tle)

@@ -27,7 +27,7 @@ Make sure that you run the `./install.sh` script after you installed the plugin.
 I provided two examples with `packer` and `lazy` but if you use something else
 check your documentation for this.
 
-<div align="center">
+<div>
 <table>
 <thead>
 <tr>

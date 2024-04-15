@@ -48,8 +48,10 @@ Default values:
       flags = "-Wall -Wextra -fdiagnostics-color=never -std=c++20 -O2",
       -- Use the soi header
       soi_header = true,
-      -- Timeout for TLE in milliseconds, 0, nil, false or -1 to disable
+      -- Timeout for TLE in milliseconds, 0, nil, false or -1 to disable (1 day will be set as hardmax)
       timeout_ms = 1000,
+      -- Timeout for code compilation in milliseconds, 0, nil, false or -1 to disable (1 day will be set as hardmax)
+      compilation_timeout_ms = 10000,
   }
 
 <
