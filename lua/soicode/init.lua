@@ -38,6 +38,20 @@ function Soicode.run_sample(sample)
     return M.run_sample(sample)
 end
 
+---Run all samples from the corresponding .stoml, .toml or .soitask file.
+---Also compiles the file before running the samples.
+---@param skip_compile boolean|nil Whether to skip the compilation step, optional.
+---@return Verdict[] verdicts The verdicts of the samples.
+---
+---@usage `require("soicode").run_all_samples()`
+function Soicode.run_all_samples(skip_compile)
+    if _G.Soicode.config == nil then
+        _G.Soicode.config = require("soicode.config").options
+    end
+
+    return M.run_all_samples(skip_compile)
+end
+
 -- setup Soicode options and merge them with user provided ones.
 function Soicode.setup(opts)
     _G.Soicode.config = require("soicode.config").setup(opts)

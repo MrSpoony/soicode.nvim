@@ -85,7 +85,7 @@ T["get_samples()"] = MiniTest.new_set()
 T["get_samples()"]["can parse the .stoml samples"] = function()
     child.cmd("edit tests/testfiles/test.stoml")
     local samples = child.lua_get("require('soicode').get_samples()")
-    expect.list_elements_match(samples, {
+    eq(samples, {
         {
             name = "sample.01",
             input = "5 0\n",
@@ -147,6 +147,21 @@ T["run_sample()"]["can detect correct TLE"] = function()
         require('soicode').run_sample({ name='sample.01', input='420 2\n', output='5\n' })
     ]])
     eq(verdict.verdict, "TLE")
+end
+
+T["run_all_samples()"] = MiniTest.new_set()
+
+T["run_all_samples()"]["can run all samples sucessfully"] = function()
+    child.cmd("edit tests/testfiles/addition.cpp")
+    local verdicts = child.lua_get([[
+        require('soicode').run_all_samples()
+    ]])
+    eq(#verdicts, 5)
+    eq(verdicts[1].verdict, "OK")
+    eq(verdicts[2].verdict, "WA")
+    eq(verdicts[3].verdict, "RE")
+    eq(verdicts[4].verdict, "RE")
+    eq(verdicts[5].verdict, "TLE")
 end
 
 return T

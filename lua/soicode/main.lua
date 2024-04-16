@@ -114,7 +114,7 @@ function Soicode.get_current_stoml_filepath()
 end
 
 ---Get samples from the current file.
----@return Sample[]|nil samples The samples from the current file or nil in case of an error.
+---@return Sample[]|nil samples The samples ordered by name from the current file or nil in case of an error.
 ---@private
 function Soicode.get_samples()
     local file = Soicode.get_current_stoml_filepath()
@@ -142,6 +142,9 @@ function Soicode.get_samples()
         D.tprint(sample)
         table.insert(samples, s)
     end
+    table.sort(samples, function(a, b)
+        return a.name < b.name
+    end)
     return samples
 end
 
@@ -263,6 +266,29 @@ function Soicode.check_sample(sample, output, code, is_tle)
         output = output,
         exitcode = code,
     }
+end
+
+---Run all samples from the corresponding .stoml, .toml or .soitask file.
+---Also compiles the file before running the samples.
+---@param skip_compile boolean|nil Whether to skip the compilation step, optional.
+---@return Verdict[] verdicts The verdicts of the samples.
+---@private
+function Soicode.run_all_samples(skip_compile)
+    skip_compile = skip_compile or false
+    local samples = Soicode.get_samples()
+    if samples == nil then
+        return {}
+    end
+    if not skip_compile then
+        Soicode.compile()
+    end
+    local verdicts = {}
+    for _, sample in ipairs(samples) do
+        local verdict = Soicode.run_sample(sample)
+        table.insert(verdicts, verdict)
+    end
+
+    return verdicts
 end
 
 return Soicode

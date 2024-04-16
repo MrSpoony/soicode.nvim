@@ -30,6 +30,19 @@ Verdict verdict The verdict of the sample.
 Usage ~
 `require("soicode").run_sample({name="sample.01", inupt="1 2", output="3"})`
 
+------------------------------------------------------------------------------
+                                                     *Soicode.run_all_samples()*
+                   `Soicode.run_all_samples`({skip_compile})
+all samples from the corresponding .stoml, .toml or .soitask file.
+compiles the file before running the samples.
+Parameters ~
+{skip_compile} `(boolean|nil)` Whether to skip the compilation step, optional.
+Return ~
+Verdict[] verdicts The verdicts of the samples.
+
+Usage ~
+`require("soicode").run_all_samples()`
+
 
 ==============================================================================
 ------------------------------------------------------------------------------
