@@ -1,4 +1,5 @@
 local D = require("soicode.util.debug")
+local S = require("soicode.state")
 
 -- internal methods
 local Soicode = {}
@@ -18,39 +19,47 @@ local Soicode = {}
 ---@field output OutputLine[] The output lines of the execution.
 ---@field exitcode number|nil The exit code of the execution, is nil when verdict is "TLE".
 
+---@param s string The string to trim.
+---@return string s The trimmed string.
+local function trim(s)
+    if s == nil then
+        return ""
+    end
+    return s:match("^%s*(.-)%s*$")
+end
+
+---@param s string The string to trim.
+---@param delim string The delimiter to trim with at the back.
+---@return string s The trimmed string.
+local function trim_back(s, delim)
+    if s == nil then
+        return ""
+    end
+    return s:match("^(.*)" .. delim .. "$")
+end
+
 ---Compiles the current file.
 ---@private
 function Soicode.compile()
+    local compiler = require("soicode.config").options.compiler
     local flags = _G.Soicode.config.flags
     local soi_header = _G.Soicode.config.soi_header
-    local args = vim.split(flags, " ")
+
+    local command = vim.split(compiler .. " " .. flags, " ")
     if soi_header then
-        table.insert(args, "-I")
+        table.insert(command, "-I")
         local soiheaderdir = "" -- TODO: fix this
-        table.insert(args, soiheaderdir)
+        table.insert(command, soiheaderdir)
     end
     local file = Soicode.get_current_cpp_filepath()
     if file == nil then
         vim.notify("Could not find a c++ file", "error")
         return
     end
-    table.insert(args, file)
-    table.insert(args, "-o")
-    table.insert(args, vim.fn.expand("%:p:r"))
-    local compiler = require("soicode.config").options.compiler
-    local errormessage = ""
-    local j = require("plenary.job"):new({
-        command = compiler,
-        args = args,
-        on_stdout = function(_, data)
-            D.log("info", "Got stdout: %s", data)
-        end,
-        on_stderr = function(_, data)
-            D.log("info", "Got stderr: %s", data)
-            errormessage = errormessage .. data .. "\n"
-        end,
-    })
-    D.log("info", "Compiling with command: %s %s", compiler, table.concat(args, " "))
+    table.insert(command, file)
+    table.insert(command, "-o")
+    table.insert(command, vim.fn.expand("%:p:r"))
+
     local timeout = _G.Soicode.config.compilation_timeout_ms
     if
         _G.Soicode.config.compilation_timeout_ms == nil
@@ -60,14 +69,36 @@ function Soicode.compile()
     then
         timeout = 1000 * 60 * 60 * 24
     end
-    local status, err = pcall(function()
-        j:sync(timeout)
-    end)
-    local code = j.code
-    if not status then
-        error(err)
-    end
+
+    local errormessage = ""
+    local cmd = vim.system(command, {
+        stdout = function(err, data)
+            if err ~= nil then
+                vim.notify(err, "error")
+                return
+            end
+
+            D.log("info", "Got stdout: %s", data)
+        end,
+        stderr = function(err, data)
+            if err ~= nil then
+                vim.notify(err, "error")
+                return
+            end
+
+            D.log("info", "Got stderr: %s", data)
+            if data ~= nil then
+                errormessage = errormessage .. data .. "\n"
+            end
+        end,
+        timeout = timeout,
+    }):wait()
+    local code = cmd.code
     if code ~= 0 then
+        if code == 124 then
+            vim.notify("Compilation timed out after " .. timeout .. "ms", "error")
+            return
+        end
         vim.notify(errormessage, "error", { title = "Compilation failed" })
     end
 end
@@ -164,41 +195,42 @@ function Soicode.run_sample(sample)
     then
         timeout = 1000 * 60 * 60 * 24
     end
-    local j = require("plenary.job"):new({
-        command = executable,
-        args = {},
-        writer = sample.input,
-        on_stdout = function(_, data)
+    local handle = vim.system({ executable }, {
+        stdin = sample.input,
+        stdout = function(err, data)
+            if err ~= nil then
+                vim.notify(err, "error")
+            end
+
             D.log("info", "Stdout: %s", data)
-            if data ~= "" then
+            if data ~= nil then
+                data = trim_back(data, "\n")
                 table.insert(output, { data = data, stdout = true })
             end
         end,
-        on_stderr = function(_, data)
+        stderr = function(err, data)
+            if err ~= nil then
+                vim.notify(err, "error")
+            end
+
             D.log("info", "Stderr: %s", data)
-            if data ~= "" then
+            if data ~= nil then
+                data = trim_back(data, "\n")
                 table.insert(output, { data = data, stdout = false })
             end
         end,
+        timeout = timeout,
     })
     D.log("info", "Running command: %s", executable)
     D.log("info", "Writing input: %s", sample.input)
-    local status, err = pcall(function()
-        j:sync(timeout)
-    end)
-    local code = j.code
-    local is_tle = false
-    if not status and err ~= nil and err:match("was unable to complete in") ~= nil then
-        is_tle = true
-    elseif not status then
-        error(err)
+    local cmd = handle:wait()
+    local code = cmd.code
+    local is_tle = code == 124
+    if code == 124 then
+        code = nil
     end
     D.log("info", "Exit code: %s", code)
     return Soicode.check_sample(sample, output, code, is_tle)
-end
-
-local function trim(s)
-    return s:match("^%s*(.-)%s*$")
 end
 
 local function split(str, delimiter)
@@ -217,7 +249,7 @@ end
 ---Check the sample
 ---@param sample Sample The sample to check.
 ---@param output OutputLine[] The output of the execution.
----@param code number The exit code of the execution
+---@param code number|nil The exit code of the execution
 ---@param is_tle boolean Whether the execution was a TLE.
 ---@return Verdict verdict The veridct of the sample.
 ---@private
@@ -232,6 +264,14 @@ function Soicode.check_sample(sample, output, code, is_tle)
             if #sample_lines < sample_line then
                 verdict = "WA"
                 break
+            end
+            if sample_lines[sample_line] == nil then
+                return {
+                    verdict = "IDK2" .. sample_line,
+                    sample = sample,
+                    output = output,
+                    exitcode = code,
+                }
             end
             if trim(line.data) ~= trim(sample_lines[sample_line]) then
                 verdict = "WA"
@@ -289,6 +329,115 @@ function Soicode.run_all_samples(skip_compile)
     end
 
     return verdicts
+end
+
+---Report all samples to the floating window.
+---@private
+function Soicode.report_all()
+    local verdicts = Soicode.run_all_samples()
+    Soicode.open_floating_window()
+    Soicode.write_verdicts_to_buf(verdicts, S.buffer)
+end
+
+---Writes the verdicts to
+---@param verdicts Verdict[] The verdicts to write to the buffer.
+---@param buf number The buffer to write to.
+---@private
+function Soicode.write_verdicts_to_buf(verdicts, buf)
+    local lines = {}
+    for i, verdict in ipairs(verdicts) do
+        if i ~= 1 then
+            table.insert(lines, "")
+        end
+
+        local str = "Sample '" .. verdict.sample.name .. "' "
+        local skip_output = false
+        if verdict.verdict == "OK" then
+            str = str .. "succesful!"
+            skip_output = true
+        elseif verdict.verdict == "WA" then
+            str = str .. "failed!"
+        elseif verdict.verdict == "RE" then
+            str = str .. "had a runtime error!"
+        elseif verdict.verdict == "TLE" then
+            str = str .. "timed out!"
+        end
+
+        table.insert(lines, str)
+
+        if not skip_output then
+            table.insert(lines, "Expected:")
+            for _, line in ipairs(split(trim(verdict.sample.output), "\n")) do
+                table.insert(lines, line)
+            end
+            if verdict.output ~= nil and #verdict.output ~= 0 then
+                local next_line = "Actual:"
+                if verdict.verdict == "RE" then
+                    next_line = "Output:"
+                end
+                table.insert(lines, next_line)
+                for _, line in ipairs(verdict.output) do
+                    table.insert(lines, line.data)
+                    -- TODO: add stderr coloring
+                end
+            end
+            table.insert(lines, "Input:")
+            for _, line in ipairs(split(trim(verdict.sample.input), "\n")) do
+                table.insert(lines, line)
+            end
+        end
+    end
+
+    vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
+end
+
+---Toggle the floating window.
+---@private
+function Soicode.toggle_floating_window()
+    if S.window == nil then
+        Soicode.open_floating_window()
+    else
+        Soicode.close_floating_window()
+    end
+end
+
+---Open the floating window.
+---@private
+function Soicode.open_floating_window()
+    if S.buffer == nil then
+        S.buffer = vim.api.nvim_create_buf(false, true)
+    end
+
+    if S.window ~= nil then
+        return
+    end
+
+    S.window = vim.api.nvim_open_win(S.buffer, true, {
+        relative = "win",
+        row = vim.o.lines / 2,
+        col = vim.o.columns / 2,
+        width = math.floor(vim.o.columns / 2), -- nvim caps it at the right of the screen
+        height = math.floor(vim.o.lines / 2), -- nvim caps it at the bottom of the screen
+        border = "single",
+        title = "soicode output",
+    })
+    if S.window == 0 then
+        vim.notify("Could not open floating window", "error")
+        return
+    end
+
+    S:save()
+end
+
+---Close the floating window.
+---@private
+function Soicode.close_floating_window()
+    if S.window ~= nil then
+        vim.api.nvim_win_close(S.window, true)
+        S.window = nil
+    end
+
+    S:save()
 end
 
 return Soicode

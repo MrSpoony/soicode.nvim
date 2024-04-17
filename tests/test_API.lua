@@ -164,4 +164,56 @@ T["run_all_samples()"]["can run all samples sucessfully"] = function()
     eq(verdicts[5].verdict, "TLE")
 end
 
+T["report_all()"] = MiniTest.new_set()
+
+T["report_all()"]["runs tests correctly and writes correct text to new buffer"] = function()
+    child.cmd("edit tests/testfiles/addition.cpp")
+    child.lua([[
+        require('soicode').report_all()
+    ]])
+    local windowid = child.lua_get([[vim.api.nvim_get_current_win()]])
+    local bufferid = child.lua_get("vim.api.nvim_win_get_buf(" .. windowid .. ")")
+    local lines = child.lua_get("vim.api.nvim_buf_get_lines(" .. bufferid .. ", 0, -1, false)")
+    eq(
+        lines,
+        helpers.split(
+            [[
+Sample 'sample.01' succesful!
+
+Sample 'sample.02' failed!
+Expected:
+1000000000000000000
+Actual:
+32767
+Input:
+700000000000000000
+300000000000000000
+
+Sample 'sample.03' had a runtime error!
+Expected:
+192
+Input:
+69
+123
+
+Sample 'sample.04' had a runtime error!
+Expected:
+7092
+Output:
+addition: /home/kimil/code/lua/soicode.nvim/tests/testfiles/addition.cpp:14: int main(): Assertion `false' failed.
+Input:
+6969
+123
+
+Sample 'sample.05' timed out!
+Expected:
+543
+Input:
+420
+123]],
+            "\n"
+        )
+    )
+end
+
 return T

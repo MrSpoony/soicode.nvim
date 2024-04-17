@@ -1,4 +1,6 @@
 local M = require("soicode.main")
+local S = require("soicode.state")
+
 local Soicode = {}
 
 --- Compile the c++ file you are currently in, or the corresponding file from the stoml file you currently have open.
@@ -52,9 +54,50 @@ function Soicode.run_all_samples(skip_compile)
     return M.run_all_samples(skip_compile)
 end
 
+---Report all samples to the floating window.
+---@usage `require("soicode").report_all()`
+function Soicode.report_all()
+    if _G.Soicode.config == nil then
+        _G.Soicode.config = require("soicode.config").options
+    end
+
+    return M.report_all()
+end
+
+---Toggle the floating window.
+---@usage `require("soicode").toggle_floating_window()`
+function Soicode.toggle_floating_window()
+    if _G.Soicode.config == nil then
+        _G.Soicode.config = require("soicode.config").options
+    end
+
+    return M.toggle_floating_window()
+end
+
+---Open the floating window.
+---@usage `require("soicode").open_floating_window()`
+function Soicode.open_floating_window()
+    if _G.Soicode.config == nil then
+        _G.Soicode.config = require("soicode.config").options
+    end
+
+    return M.open_floating_window()
+end
+
+---Close the floating window.
+---@usage `require("soicode").close_floating_window()`
+function Soicode.close_floating_window()
+    if _G.Soicode.config == nil then
+        _G.Soicode.config = require("soicode.config").options
+    end
+
+    return M.close_floating_window()
+end
+
 -- setup Soicode options and merge them with user provided ones.
 function Soicode.setup(opts)
     _G.Soicode.config = require("soicode.config").setup(opts)
+    S:reset()
 end
 
 _G.Soicode = Soicode

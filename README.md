@@ -22,6 +22,8 @@ Most of the features present in the soicode plugin are also present here.
 
 ## 📋 Installation
 
+> **Important: You need to be on Neovim Nightly, because this plugin uses `vim.system()`**
+
 Make sure that you run the `./install.sh` script after you installed the plugin.
 
 I provided two examples with `packer` and `lazy` but if you use something else
@@ -52,8 +54,7 @@ require("lazy").setup({
         version = "*",
         build = "./install.sh"
         dependencies = {
-            "nvim-lua/plenary.nvim"
-            -- "rcarriga/nvim-notify" -- Opitonal for pretty notifications
+            -- "rcarriga/nvim-notify"
         }
     },
 })
@@ -63,8 +64,7 @@ require("lazy").setup({
         "soicode.nvim",
         build = "./install.sh"
         dependencies = {
-            "nvim-lua/plenary.nvim"
-            -- "rcarriga/nvim-notify" -- Opitonal for pretty notifications
+            -- "rcarriga/nvim-notify"
         }
     },
 })
@@ -72,35 +72,13 @@ require("lazy").setup({
 
 </td>
 </tr>
-<tr>
-<td>
-
-[wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim)
-
-</td>
-<td>
-
-```lua
--- stable version
-use {
-    "soicode.nvim",
-    tag = "*",
-    run = "./install.sh",
-    requires = { {"nvim-lua/plenary.nvim"}, {"rcarriga/nvim-notify"} }
-}
--- dev version
-use {
-    "soicode.nvim",
-    run = "./install.sh",
-    requires = { {"nvim-lua/plenary.nvim"}, {"rcarriga/nvim-notify"} }
-}
-```
-
-</td>
-</tr>
 </tbody>
 </table>
 </div>
+
+The plugin `rcarriga/nvim-notify` is recommended but not needed,
+because this plugin works a lot with notifications and this plugin (or similar)
+provide a nice UI for displaying them on the screen.
 
 ## ☄ Getting started
 

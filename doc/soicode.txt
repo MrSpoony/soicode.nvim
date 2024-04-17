@@ -43,6 +43,34 @@ Verdict[] verdicts The verdicts of the samples.
 Usage ~
 `require("soicode").run_all_samples()`
 
+------------------------------------------------------------------------------
+                                                          *Soicode.report_all()*
+                             `Soicode.report_all`()
+all samples to the floating window.
+Usage ~
+`require("soicode").report_all()`
+
+------------------------------------------------------------------------------
+                                              *Soicode.toggle_floating_window()*
+                       `Soicode.toggle_floating_window`()
+the floating window.
+Usage ~
+`require("soicode").toggle_floating_window()`
+
+------------------------------------------------------------------------------
+                                                *Soicode.open_floating_window()*
+                        `Soicode.open_floating_window`()
+the floating window.
+Usage ~
+`require("soicode").open_floating_window()`
+
+------------------------------------------------------------------------------
+                                               *Soicode.close_floating_window()*
+                       `Soicode.close_floating_window`()
+the floating window.
+Usage ~
+`require("soicode").close_floating_window()`
+
 
 ==============================================================================
 ------------------------------------------------------------------------------
@@ -65,6 +93,8 @@ Default values:
       timeout_ms = 1000,
       -- Timeout for code compilation in milliseconds, 0, nil, false or -1 to disable (1 day will be set as hardmax)
       compilation_timeout_ms = 10000,
+      -- Run in background, and don't block the UI
+      run_in_background = true,
   }
 
 <
@@ -105,6 +135,23 @@ Fields ~
 {sample} Sample The sample the Verdict corresponds to.
 {output} OutputLine[] The output lines of the execution.
 {exitcode} `(number|nil)` The exit code of the execution, is nil when verdict is "TLE".
+
+------------------------------------------------------------------------------
+                                                                        *trim()*
+                                  `trim`({s})
+Parameters ~
+{s} `(string)` The string to trim.
+Return ~
+`(string)` s The trimmed string.
+
+------------------------------------------------------------------------------
+                                                                   *trim_back()*
+                           `trim_back`({s}, {delim})
+Parameters ~
+{s} `(string)` The string to trim.
+{delim} `(string)` The delimiter to trim with at the back.
+Return ~
+`(string)` s The trimmed string.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

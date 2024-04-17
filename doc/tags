@@ -1,6 +1,12 @@
+Soicode.close_floating_window()	soicode.txt	/*Soicode.close_floating_window()*
 Soicode.compile()	soicode.txt	/*Soicode.compile()*
 Soicode.get_samples()	soicode.txt	/*Soicode.get_samples()*
+Soicode.open_floating_window()	soicode.txt	/*Soicode.open_floating_window()*
 Soicode.options	soicode.txt	/*Soicode.options*
+Soicode.report_all()	soicode.txt	/*Soicode.report_all()*
 Soicode.run_all_samples()	soicode.txt	/*Soicode.run_all_samples()*
 Soicode.run_sample()	soicode.txt	/*Soicode.run_sample()*
 Soicode.setup()	soicode.txt	/*Soicode.setup()*
+Soicode.toggle_floating_window()	soicode.txt	/*Soicode.toggle_floating_window()*
+trim()	soicode.txt	/*trim()*
+trim_back()	soicode.txt	/*trim_back()*
