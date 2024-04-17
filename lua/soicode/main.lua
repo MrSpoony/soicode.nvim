@@ -58,7 +58,7 @@ function Soicode.compile()
     end
     table.insert(command, file)
     table.insert(command, "-o")
-    table.insert(command, vim.fn.expand("%:p:r"))
+    table.insert(command, vim.fn.expand("%:r"))
 
     local timeout = _G.Soicode.config.compilation_timeout_ms
     if
@@ -107,7 +107,7 @@ end
 ---@return string|nil filename The current c++ file or nil if not found.
 ---@private
 function Soicode.get_current_cpp_filepath()
-    local prefix = vim.fn.expand("%:p:r")
+    local prefix = vim.fn.expand("%:r")
     local files = vim.fn.glob(prefix .. ".*", false, true)
     for _, file in ipairs(files) do
         if
@@ -128,7 +128,7 @@ end
 ---@return string|nil filename The current stoml file or nil if not found.
 ---@private
 function Soicode.get_current_stoml_filepath()
-    local prefix = vim.fn.expand("%:p:r")
+    local prefix = vim.fn.expand("%:r")
     local files = vim.fn.glob(prefix .. ".*", false, true)
     for _, file in ipairs(files) do
         if
@@ -184,7 +184,7 @@ end
 ---@return Verdict verdict The verdict of the sample.
 ---@private
 function Soicode.run_sample(sample)
-    local executable = vim.fn.expand("%:p:r")
+    local executable = vim.fn.expand("%:r")
     local output = {}
     local timeout = _G.Soicode.config.timeout_ms
     if

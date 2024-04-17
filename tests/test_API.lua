@@ -200,7 +200,7 @@ Sample 'sample.04' had a runtime error!
 Expected:
 7092
 Output:
-addition: /home/kimil/code/lua/soicode.nvim/tests/testfiles/addition.cpp:14: int main(): Assertion `false' failed.
+addition: tests/testfiles/addition.cpp:14: int main(): Assertion `false' failed.
 Input:
 6969
 123
