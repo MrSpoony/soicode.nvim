@@ -182,12 +182,12 @@ Sample 'sample.01' succesful!
 
 Sample 'sample.02' failed!
 Expected:
-1000000000000000000
+100
 Actual:
-65535
+111
 Input:
-700000000000000000
-300000000000000000
+70
+30
 
 Sample 'sample.03' had a runtime error!
 Expected:

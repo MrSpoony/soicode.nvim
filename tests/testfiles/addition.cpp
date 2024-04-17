@@ -3,7 +3,7 @@
 using namespace std;
 
 int main() {
-  ushort a, b;
+  int a, b;
   cin >> a >> b;
   if (a == 420)
     while (1) {
@@ -12,11 +12,12 @@ int main() {
     exit(1);
   else if (a == 6969)
     assert(false);
-  for (ushort i = 0; i < b; i++) {
-    a++;
+  else if (a == 70) {
+    cout << 111 << "\n";
+    return 0;
   }
 
-  cout << a << endl;
+  cout << a + b << "\n";
 
   return 0;
 }
