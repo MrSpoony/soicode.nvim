@@ -97,6 +97,8 @@ Default values:
       run_in_background = true,
   }
 
+  Soicode.ns = vim.api.nvim_create_namespace("soicode")
+
 <
 
 ------------------------------------------------------------------------------

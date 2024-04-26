@@ -1,3 +1,4 @@
+local C = require("soicode.config")
 local D = require("soicode.util.debug")
 local S = require("soicode.state")
 
@@ -42,8 +43,8 @@ end
 ---@private
 function Soicode.compile()
     local compiler = require("soicode.config").options.compiler
-    local flags = _G.Soicode.config.flags
-    local soi_header = _G.Soicode.config.soi_header
+    local flags = C.options.flags
+    local soi_header = C.options.soi_header
 
     local command = vim.split(compiler .. " " .. flags, " ")
     if soi_header then
@@ -53,19 +54,19 @@ function Soicode.compile()
     end
     local file = Soicode.get_current_cpp_filepath()
     if file == nil then
-        vim.notify("Could not find a c++ file", "error")
+        vim.notify("Could not find a c++ file", vim.log.levels.ERROR)
         return
     end
     table.insert(command, file)
     table.insert(command, "-o")
     table.insert(command, vim.fn.expand("%:r"))
 
-    local timeout = _G.Soicode.config.compilation_timeout_ms
+    local timeout = C.options.compilation_timeout_ms
     if
-        _G.Soicode.config.compilation_timeout_ms == nil
-        or _G.Soicode.config.compilation_timeout_ms == 0
-        or _G.Soicode.config.compilation_timeout_ms == -1
-        or _G.Soicode.config.compilation_timeout_ms == false
+        C.options.compilation_timeout_ms == nil
+        or C.options.compilation_timeout_ms == 0
+        or C.options.compilation_timeout_ms == -1
+        or C.options.compilation_timeout_ms == false
     then
         timeout = 1000 * 60 * 60 * 24
     end
@@ -74,7 +75,7 @@ function Soicode.compile()
     local cmd = vim.system(command, {
         stdout = function(err, data)
             if err ~= nil then
-                vim.notify(err, "error")
+                vim.notify(err, vim.log.levels.ERROR)
                 return
             end
 
@@ -82,7 +83,7 @@ function Soicode.compile()
         end,
         stderr = function(err, data)
             if err ~= nil then
-                vim.notify(err, "error")
+                vim.notify(err, vim.log.levels.ERROR)
                 return
             end
 
@@ -96,10 +97,10 @@ function Soicode.compile()
     local code = cmd.code
     if code ~= 0 then
         if code == 124 then
-            vim.notify("Compilation timed out after " .. timeout .. "ms", "error")
+            vim.notify("Compilation timed out after " .. timeout .. "ms", vim.log.levels.ERROR)
             return
         end
-        vim.notify(errormessage, "error", { title = "Compilation failed" })
+        vim.notify(errormessage, vim.log.levels.ERROR, { title = "Compilation failed" })
     end
 end
 
@@ -150,7 +151,7 @@ end
 function Soicode.get_samples()
     local file = Soicode.get_current_stoml_filepath()
     if file == nil then
-        vim.notify("Could not find a stoml file", "error")
+        vim.notify("Could not find a stoml file", vim.log.levels.ERROR)
         return nil
     end
     local toml = io.open(file, "r"):read("a")
@@ -186,12 +187,12 @@ end
 function Soicode.run_sample(sample)
     local executable = vim.fn.expand("%:r")
     local output = {}
-    local timeout = _G.Soicode.config.timeout_ms
+    local timeout = C.options.timeout_ms
     if
-        _G.Soicode.config.timeout_ms == nil
-        or _G.Soicode.config.timeout_ms == 0
-        or _G.Soicode.config.timeout_ms == -1
-        or _G.Soicode.config.timeout_ms == false
+        C.options.timeout_ms == nil
+        or C.options.timeout_ms == 0
+        or C.options.timeout_ms == -1
+        or C.options.timeout_ms == false
     then
         timeout = 1000 * 60 * 60 * 24
     end
@@ -199,7 +200,7 @@ function Soicode.run_sample(sample)
         stdin = sample.input,
         stdout = function(err, data)
             if err ~= nil then
-                vim.notify(err, "error")
+                vim.notify(err, vim.log.levels.ERROR)
             end
 
             D.log("info", "Stdout: %s", data)
@@ -210,7 +211,7 @@ function Soicode.run_sample(sample)
         end,
         stderr = function(err, data)
             if err ~= nil then
-                vim.notify(err, "error")
+                vim.notify(err, vim.log.levels.ERROR)
             end
 
             D.log("info", "Stderr: %s", data)
@@ -345,13 +346,49 @@ end
 ---@private
 function Soicode.write_verdicts_to_buf(verdicts, buf)
     local lines = {}
+    local extmarks = {}
+
+    local line_nr = 0
+
+    local new_extmark = function(text, hl)
+        local col = 0
+        return {
+            col = col,
+            line = line_nr,
+            opts = {
+                end_col = col + vim.fn.strlen(text),
+                hl_group = hl,
+            },
+        }
+    end
+
+    local new_multiline_extmark = function(text, hl)
+        if type(text) == "string" then
+            text = split(trim(text), "\n")
+        end
+        local last_line = text[#text]
+
+        local col = 0
+        return {
+            col = col,
+            line = line_nr,
+            opts = {
+                -- end_col = col + vim.fn.strlen(last_line),
+                end_line = line_nr + #text,
+                hl_group = hl,
+            },
+        }
+    end
+
     for i, verdict in ipairs(verdicts) do
         if i ~= 1 then
             table.insert(lines, "")
+            line_nr = line_nr + 1
         end
 
         local str = "Sample '" .. verdict.sample.name .. "' "
         local skip_output = false
+
         if verdict.verdict == "OK" then
             str = str .. "succesful!"
             skip_output = true
@@ -364,31 +401,69 @@ function Soicode.write_verdicts_to_buf(verdicts, buf)
         end
 
         table.insert(lines, str)
+        table.insert(extmarks, new_extmark(str, "Soi" .. verdict.verdict))
+        line_nr = line_nr + 1
 
         if not skip_output then
-            table.insert(lines, "Expected:")
-            for _, line in ipairs(split(trim(verdict.sample.output), "\n")) do
+            local expected_title = "Expected:"
+            table.insert(lines, expected_title)
+            table.insert(extmarks, new_extmark(expected_title, "SoiExpectedTitle"))
+            line_nr = line_nr + 1
+
+            local expected_text = split(trim(verdict.sample.output), "\n")
+            for _, line in ipairs(expected_text) do
                 table.insert(lines, line)
             end
+            table.insert(extmarks, new_multiline_extmark(expected_text, "SoiExpected"))
+            line_nr = line_nr + #expected_text
+
             if verdict.output ~= nil and #verdict.output ~= 0 then
                 local next_line = "Actual:"
                 if verdict.verdict == "RE" then
                     next_line = "Output:"
                 end
                 table.insert(lines, next_line)
+                table.insert(extmarks, new_extmark(next_line, "SoiActualTitle"))
+                line_nr = line_nr + 1
+
                 for _, line in ipairs(verdict.output) do
                     table.insert(lines, line.data)
-                    -- TODO: add stderr coloring
+                    if line.stdout then
+                        table.insert(extmarks, new_extmark(line.data, "SoiOutput"))
+                    else
+                        table.insert(extmarks, new_extmark(line.data, "SoiOutputStderr"))
+                    end
+                    line_nr = line_nr + 1
                 end
             end
-            table.insert(lines, "Input:")
-            for _, line in ipairs(split(trim(verdict.sample.input), "\n")) do
+
+            local input_title = "Input:"
+            table.insert(lines, input_title)
+            table.insert(extmarks, new_extmark(input_title, "SoiInputTitle"))
+            line_nr = line_nr + 1
+
+            local input_text = split(trim(verdict.sample.input), "\n")
+            for _, line in ipairs(input_text) do
                 table.insert(lines, line)
             end
+            table.insert(extmarks, new_multiline_extmark(input_text, "SoiInput"))
+            line_nr = line_nr + #input_text
         end
     end
 
     vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
+    vim.api.nvim_buf_clear_namespace(buf, C.ns, 0, -1)
+    for _, extmark in ipairs(extmarks) do
+        local ok =
+            pcall(vim.api.nvim_buf_set_extmark, buf, C.ns, extmark.line, extmark.col, extmark.opts)
+        if not ok then
+            vim.notify(
+                "extmark: " .. vim.inspect(extmark),
+                vim.log.levels.ERROR,
+                { title = "Could not set extmark" }
+            )
+        end
+    end
 end
 
 ---Toggle the floating window.
@@ -422,7 +497,7 @@ function Soicode.open_floating_window()
         title = "soicode output",
     })
     if S.window == 0 then
-        vim.notify("Could not open floating window", "error")
+        vim.notify("Could not open floating window", vim.log.levels.ERROR)
         return
     end
 

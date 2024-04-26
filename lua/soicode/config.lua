@@ -21,6 +21,8 @@ Soicode.options = {
     run_in_background = true,
 }
 
+Soicode.ns = vim.api.nvim_create_namespace("soicode")
+
 --- Define your soicode setup.
 ---
 ---@param options table Module config table. See |Soicode.options|.
@@ -30,6 +32,8 @@ function Soicode.setup(options)
     options = options or {}
 
     Soicode.options = vim.tbl_deep_extend("keep", options, Soicode.options)
+
+    require("soicode.colors").setup()
 
     return Soicode.options
 end
