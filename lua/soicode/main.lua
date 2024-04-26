@@ -46,7 +46,8 @@ function Soicode.compile()
     local flags = C.options.flags
     local soi_header = C.options.soi_header
 
-    local command = vim.split(compiler .. " " .. flags, " ")
+    local command = { compiler }
+    vim.list_extend(command, flags)
     if soi_header then
         table.insert(command, "-I")
         local soiheaderdir = "" -- TODO: fix this
