@@ -82,12 +82,14 @@ provide a nice UI for displaying them on the screen.
 
 ## ☄ Getting started
 
-TODO:
+TODO: document
+
 Describe how to use the plugin the simplest way
 
 ## ⚙ Configuration
 
-TODO:
+TODO: document
+
 The configuration list sometimes become cumbersome, making it folded by default reduce the noise of the README file.
 
 <details>
@@ -105,7 +107,7 @@ require("soicode").setup({
 
 ## 🧰 Commands
 
-TODO:
+TODO: document/create
 
 | Command   | Description         |
 | --------- | ------------------- |
@@ -114,6 +116,14 @@ TODO:
 ## ⌨ Contributing
 
 PRs and issues are always welcome. Make sure to provide as much context as possible when opening one.
+
+## 📝 Todo list
+
+- [ ] Add neovim commands for easier access, and shortcut configuration
+- [ ] Add template support
+- [ ] Add soi header
+- [ ] Add stoml auto-copy feature
+- [ ] Debugging samples -> DAP adapter configuration etc.?
 
 ## 🎭 Motivation
 
