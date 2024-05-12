@@ -336,11 +336,12 @@ end
 
 ---Report one sample to the floating window.
 ---@param sample Sample The sample to report.
----@private 
+---@private
 function Soicode.report_one(sample)
+    Soicode.compile()
     local verdict = Soicode.run_sample(sample)
     Soicode.open_floating_window()
-    Soicode.write_verdicts_to_buf({verdict}, S.buffer)
+    Soicode.write_verdicts_to_buf({ verdict }, S.buffer)
 end
 
 ---Writes the verdicts to
@@ -424,7 +425,9 @@ function Soicode.write_verdicts_to_buf(verdicts, buf)
 
                 for _, line in ipairs(verdict.output) do
                     local ext = "SoiOutput"
-                    if not line.stdout then ext = "SoiOutputStderr" end
+                    if not line.stdout then
+                        ext = "SoiOutputStderr"
+                    end
                     add_line(line.data, ext)
                 end
             end

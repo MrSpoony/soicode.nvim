@@ -28,7 +28,7 @@ Return ~
 Verdict verdict The verdict of the sample.
 
 Usage ~
-`require("soicode").run_sample({name="sample.01", inupt="1 2", output="3"})`
+`require("soicode").run_sample({name="sample.01", input="1 2", output="3"})`
 
 ------------------------------------------------------------------------------
                                                      *Soicode.run_all_samples()*
@@ -49,6 +49,40 @@ Usage ~
 all samples to the floating window.
 Usage ~
 `require("soicode").report_all()`
+
+------------------------------------------------------------------------------
+                                                          *Soicode.report_one()*
+                         `Soicode.report_one`({sample})
+one sample to the floating window.
+Parameters ~
+{sample} Sample The sampne to report
+
+Usage ~
+`require("soicode").report_one({name="sample.01", input="1 2", output="3"})`
+
+------------------------------------------------------------------------------
+                                                              *Soicode.report()*
+                          `Soicode.report`({verdicts})
+the verdicts to the buffer.
+Parameters ~
+{verdicts} Verdict[] The verdicts to write to the buffer.
+
+Usage ~
+`require("soicode").write_verdicts_to_buf({
+   {
+       verdict="OK",
+       sample={
+           name="sample.01",
+           input="1 2",
+           output="3"
+       },
+       output={
+           {data="3", stdout=true},
+           {data="", stdout=true}
+       },
+       exitcode=0
+   }
+
 
 ------------------------------------------------------------------------------
                                               *Soicode.toggle_floating_window()*

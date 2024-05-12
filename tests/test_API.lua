@@ -166,18 +166,8 @@ end
 
 T["report_all()"] = MiniTest.new_set()
 
-T["report_all()"]["runs tests correctly and writes correct text to new buffer"] = function()
-    child.cmd("edit tests/testfiles/addition.cpp")
-    child.lua([[
-        require('soicode').report_all()
-    ]])
-    local windowid = child.lua_get([[vim.api.nvim_get_current_win()]])
-    local bufferid = child.lua_get("vim.api.nvim_win_get_buf(" .. windowid .. ")")
-    local lines = child.lua_get("vim.api.nvim_buf_get_lines(" .. bufferid .. ", 0, -1, false)")
-    eq(
-        lines,
-        helpers.split(
-            [[
+local addition_verdicts_output = helpers.split(
+    [[
 Sample 'sample.01' succesful!
 
 Sample 'sample.02' failed!
@@ -211,9 +201,29 @@ Expected:
 Input:
 420
 123]],
-            "\n"
-        )
-    )
+    "\n"
+)
+
+T["report_all()"]["runs tests correctly and writes correct text to new buffer"] = function()
+    child.cmd("edit tests/testfiles/addition.cpp")
+    child.lua([[
+        require('soicode').report_all()
+    ]])
+    local windowid = child.lua_get([[vim.api.nvim_get_current_win()]])
+    local bufferid = child.lua_get("vim.api.nvim_win_get_buf(" .. windowid .. ")")
+    local lines = child.lua_get("vim.api.nvim_buf_get_lines(" .. bufferid .. ", 0, -1, false)")
+    eq(lines, addition_verdicts_output)
+end
+
+T["commands"] = MiniTest.new_set()
+
+T["commands"]["run"] = function()
+    child.cmd("edit tests/testfiles/addition.cpp")
+    child.cmd("Soi run sample.01 sample.02 sample.03 sample.04 sample.05")
+    local windowid = child.lua_get([[vim.api.nvim_get_current_win()]])
+    local bufferid = child.lua_get("vim.api.nvim_win_get_buf(" .. windowid .. ")")
+    local lines = child.lua_get("vim.api.nvim_buf_get_lines(" .. bufferid .. ", 0, -1, false)")
+    eq(lines, addition_verdicts_output)
 end
 
 return T

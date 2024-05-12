@@ -31,7 +31,7 @@ end
 ---@param sample Sample The sample to run.
 ---@return Verdict verdict The verdict of the sample.
 ---
----@usage `require("soicode").run_sample({name="sample.01", inupt="1 2", output="3"})`
+---@usage `require("soicode").run_sample({name="sample.01", input="1 2", output="3"})`
 function Soicode.run_sample(sample)
     if _G.Soicode.config == nil then
         _G.Soicode.config = require("soicode.config").options
@@ -64,12 +64,42 @@ function Soicode.report_all()
     return M.report_all()
 end
 
+---Report one sample to the floating window.
+---@param sample Sample The sampne to report
+---
+---@usage `require("soicode").report_one({name="sample.01", input="1 2", output="3"})`
 function Soicode.report_one(sample)
     if _G.Soicode.config == nil then
         _G.Soicode.config = require("soicode.config").options
     end
 
     return M.report_one(sample)
+end
+
+---Write the verdicts to the buffer.
+---@param verdicts Verdict[] The verdicts to write to the buffer.
+---
+---@usage `require("soicode").write_verdicts_to_buf({
+---    {
+---        verdict="OK",
+---        sample={
+---            name="sample.01",
+---            input="1 2",
+---            output="3"
+---        },
+---        output={
+---            {data="3", stdout=true},
+---            {data="", stdout=true}
+---        },
+---        exitcode=0
+---    }
+---})`
+function Soicode.report(verdicts)
+    if _G.Soicode.config == nil then
+        _G.Soicode.config = require("soicode.config").options
+    end
+
+    return M.write_verdicts_to_buf(verdicts, S.buffer)
 end
 
 ---Toggle the floating window.
