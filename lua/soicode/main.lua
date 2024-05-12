@@ -341,6 +341,15 @@ function Soicode.report_all()
     Soicode.write_verdicts_to_buf(verdicts, S.buffer)
 end
 
+---Report one sample to the floating window.
+---@param sample Sample The sample to report.
+---@private 
+function Soicode.report_one(sample)
+    local verdict = Soicode.run_sample(sample)
+    Soicode.open_floating_window()
+    Soicode.write_verdicts_to_buf({verdict}, S.buffer)
+end
+
 ---Writes the verdicts to
 ---@param verdicts Verdict[] The verdicts to write to the buffer.
 ---@param buf number The buffer to write to.

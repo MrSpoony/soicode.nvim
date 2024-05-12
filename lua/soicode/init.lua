@@ -64,6 +64,14 @@ function Soicode.report_all()
     return M.report_all()
 end
 
+function Soicode.report_one(sample)
+    if _G.Soicode.config == nil then
+        _G.Soicode.config = require("soicode.config").options
+    end
+
+    return M.report_one(sample)
+end
+
 ---Toggle the floating window.
 ---@usage `require("soicode").toggle_floating_window()`
 function Soicode.toggle_floating_window()
