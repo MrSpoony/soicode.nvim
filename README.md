@@ -124,7 +124,7 @@ PRs and issues are always welcome. Make sure to provide as much context as possi
 - [ ] Add soi header
 - [ ] Add stoml auto-copy feature
 - [ ] Cache for compiling -> only compile when source has changed, command/flags changed or some time passed.
-- [ ] Debugging samples -> DAP adapter configuration etc.?
+- [ ] Debugging samples -> DAP configuration etc.?
 
 ## 🎭 Motivation
 

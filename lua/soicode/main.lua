@@ -258,36 +258,32 @@ end
 function Soicode.check_sample(sample, output, code, is_tle)
     local verdict = "OK"
 
-    local sample_lines = split(trim(sample.output), "\n")
-    local sample_line = 1
+    local expected = split(trim(sample.output), "\n")
+    local has_line = 1
     local has_error = false
     for _, line in ipairs(output) do
         if line.stdout then
-            if #sample_lines < sample_line then
+            -- Output is longer than expected
+            if #expected < has_line then
                 verdict = "WA"
                 break
             end
-            if sample_lines[sample_line] == nil then
-                return {
-                    verdict = "IDK2" .. sample_line,
-                    sample = sample,
-                    output = output,
-                    exitcode = code,
-                }
-            end
-            if trim(line.data) ~= trim(sample_lines[sample_line]) then
+            if trim(line.data) ~= trim(expected[has_line]) then
                 verdict = "WA"
             end
-            sample_line = sample_line + 1
+            has_line = has_line + 1
         else
             has_error = true
         end
     end
 
-    if sample_line ~= #sample_lines + 1 then
+    -- Output is longer or shorter than expected
+    if has_line ~= #expected + 1 then
         verdict = "WA"
     end
 
+    -- If there is a WA and an error logged, it is a RE
+    -- This is needed because assertions don't always change the error code
     if verdict == "WA" and has_error then
         verdict = "RE"
     end
@@ -295,13 +291,10 @@ function Soicode.check_sample(sample, output, code, is_tle)
     -- Error codes and TLE take precedence
     if is_tle then
         verdict = "TLE"
-        goto ret
     elseif code ~= 0 then
         verdict = "RE"
-        goto ret
     end
 
-    ::ret::
     return {
         verdict = verdict,
         sample = sample,
@@ -361,39 +354,45 @@ function Soicode.write_verdicts_to_buf(verdicts, buf)
     local line_nr = 0
 
     local new_extmark = function(text, hl)
-        local col = 0
-        return {
-            col = col,
-            line = line_nr,
-            opts = {
-                end_col = col + vim.fn.strlen(text),
-                hl_group = hl,
-            },
-        }
-    end
-
-    local new_multiline_extmark = function(text, hl)
         if type(text) == "string" then
             text = split(trim(text), "\n")
         end
-        local last_line = text[#text]
 
         local col = 0
         return {
             col = col,
             line = line_nr,
             opts = {
-                -- end_col = col + vim.fn.strlen(last_line),
                 end_line = line_nr + #text,
                 hl_group = hl,
             },
         }
     end
 
+    local add_line = function(text, col)
+        local text_splitted = {}
+        if type(text) == "string" then
+            text_splitted = split(trim(text), "\n")
+        elseif type(text) == "table" then
+            text_splitted = text
+        else
+            D.log("error", "Cannot add line, got called with", text)
+            return
+        end
+        local line_cnt = #text_splitted
+
+        for _, l in ipairs(text_splitted) do
+            table.insert(lines, l)
+        end
+        if col ~= nil then
+            table.insert(extmarks, new_extmark(text_splitted, col))
+        end
+        line_nr = line_nr + line_cnt
+    end
+
     for i, verdict in ipairs(verdicts) do
         if i ~= 1 then
-            table.insert(lines, "")
-            line_nr = line_nr + 1
+            add_line("")
         end
 
         local str = "Sample '" .. verdict.sample.name .. "' "
@@ -410,54 +409,28 @@ function Soicode.write_verdicts_to_buf(verdicts, buf)
             str = str .. "timed out!"
         end
 
-        table.insert(lines, str)
-        table.insert(extmarks, new_extmark(str, "Soi" .. verdict.verdict))
-        line_nr = line_nr + 1
+        add_line(str, "Soi" .. verdict.verdict)
 
         if not skip_output then
-            local expected_title = "Expected:"
-            table.insert(lines, expected_title)
-            table.insert(extmarks, new_extmark(expected_title, "SoiExpectedTitle"))
-            line_nr = line_nr + 1
-
-            local expected_text = split(trim(verdict.sample.output), "\n")
-            for _, line in ipairs(expected_text) do
-                table.insert(lines, line)
-            end
-            table.insert(extmarks, new_multiline_extmark(expected_text, "SoiExpected"))
-            line_nr = line_nr + #expected_text
+            add_line("Expected:", "SoiExpectedTitle")
+            add_line(split(trim(verdict.sample.output), "\n"), "SoiExpected")
 
             if verdict.output ~= nil and #verdict.output ~= 0 then
                 local next_line = "Actual:"
                 if verdict.verdict == "RE" then
                     next_line = "Output:"
                 end
-                table.insert(lines, next_line)
-                table.insert(extmarks, new_extmark(next_line, "SoiActualTitle"))
-                line_nr = line_nr + 1
+                add_line(next_line, "SoiActualTitle")
 
                 for _, line in ipairs(verdict.output) do
-                    table.insert(lines, line.data)
-                    if line.stdout then
-                        table.insert(extmarks, new_extmark(line.data, "SoiOutput"))
-                    else
-                        table.insert(extmarks, new_extmark(line.data, "SoiOutputStderr"))
-                    end
-                    line_nr = line_nr + 1
+                    local ext = "SoiOutput"
+                    if not line.stdout then ext = "SoiOutputStderr" end
+                    add_line(line.data, ext)
                 end
             end
 
-            local input_title = "Input:"
-            table.insert(lines, input_title)
-            table.insert(extmarks, new_extmark(input_title, "SoiInputTitle"))
-            line_nr = line_nr + 1
-
-            local input_text = split(trim(verdict.sample.input), "\n")
-            for _, line in ipairs(input_text) do
-                table.insert(lines, line)
-            end
-            table.insert(extmarks, new_multiline_extmark(input_text, "SoiInput"))
-            line_nr = line_nr + #input_text
+            add_line("Input:", "SoiInputTitle")
+            add_line(split(trim(verdict.sample.input), "\n"), "SoiInput")
         end
     end
 
