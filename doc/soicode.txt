@@ -83,7 +83,6 @@ Usage ~
        exitcode=0
    }
 
-
 ------------------------------------------------------------------------------
                                               *Soicode.toggle_floating_window()*
                        `Soicode.toggle_floating_window`()
@@ -113,7 +112,7 @@ Usage ~
 Your plugin configuration with its default values.
 
 Default values:
->
+>lua
   Soicode.options = {
       -- Prints useful logs about what event are triggered, and reasons actions are executed.
       debug = false,
@@ -142,7 +141,6 @@ Default values:
   Soicode.ns = vim.api.nvim_create_namespace("soicode")
 
 <
-
 ------------------------------------------------------------------------------
                                                                *Soicode.setup()*
                            `Soicode.setup`({options})
