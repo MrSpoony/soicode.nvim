@@ -39,7 +39,7 @@ local function trim_back(s, delim)
     return s:match("^(.*)" .. delim .. "$")
 end
 
----Compiles the current file.
+---Compiles the current file with -o vim.fn.expand("%:r").
 ---@private
 function Soicode.compile()
     local compiler = C.options.compiler
@@ -251,6 +251,27 @@ local function split(str, delimiter)
     end
     table.insert(result, string.sub(str, from))
     return result
+end
+
+---Run the current file with your own input.
+---@private
+function Soicode.run_with_own_input()
+    Soicode.compile()
+    local file = vim.fn.expand("%:r")
+
+    Soicode.open_floating_window()
+
+    if S.cmd_buffer == nil then
+        S.cmd_buffer = vim.api.nvim_create_buf(false, true)
+    end
+
+    vim.api.nvim_win_set_buf(S.window, S.cmd_buffer)
+    vim.api.nvim_buf_set_var(S.cmd_buffer, "relativenumber", false)
+    vim.api.nvim_buf_set_var(S.cmd_buffer, "number", false)
+    vim.api.nvim_set_current_buf(S.cmd_buffer)
+
+    vim.print("terminal " .. file)
+    vim.cmd("terminal " .. file)
 end
 
 ---Check the sample
@@ -474,7 +495,8 @@ function Soicode.open_floating_window()
         S.buffer = vim.api.nvim_create_buf(false, true)
     end
 
-    if S.window ~= nil then
+    if S.window ~= nil and vim.api.nvim_win_is_valid(S.window) then
+        vim.api.nvim_win_set_buf(S.window, S.buffer)
         return
     end
 

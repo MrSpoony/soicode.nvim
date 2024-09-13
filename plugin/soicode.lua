@@ -91,7 +91,7 @@ vim.api.nvim_create_user_command("Soi", function(opts)
         require("soicode").open_floating_window()
         require("soicode").report(verdicts)
     elseif arg == "run_with_own_input" then
-        -- TODO: add
+        require("soicode").run_with_own_input()
     elseif arg == "create_stoml" then
         -- TODO: add
     elseif arg == "toggle_stoml" then

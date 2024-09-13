@@ -2,6 +2,7 @@ local D = require("soicode.util.debug")
 
 local State = {
     buffer = nil,
+    cmd_buffer = nil,
     window = nil,
     has_soi_header = false,
 }

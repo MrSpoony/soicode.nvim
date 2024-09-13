@@ -14,6 +14,13 @@ local T = MiniTest.new_set({
         pre_case = function()
             -- Restart child process with custom 'init.lua' script
             child.restart({ "-u", "scripts/minimal_init.lua" })
+
+            child.lua([[
+                _G.notifications = {}
+                vim.notify = function(msg, level, opts)
+                    table.insert(_G.notifications, {msg=msg, level=level, opts=opts})
+                end
+            ]])
         end,
         -- This will be executed one after all tests from this set are finished
         post_once = child.stop,
@@ -52,38 +59,27 @@ T["setup()"]["overrides default values"] = function()
     eq_type_config(child, "debug", "boolean")
 end
 
-T["compile()"] = MiniTest.new_set({
-    hooks = {
-        pre_case = function()
-            child.lua([[
-                _G.messages = {}
-                vim.notify = function(msg, level, opts)
-                    table.insert(_G.messages, {msg=msg, level=level, opts=opts})
-                end
-            ]])
-        end,
-    },
-})
+T["compile()"] = MiniTest.new_set()
 
 T["compile()"]["should compile"] = function()
     child.cmd("edit tests/testfiles/shouldcompile.cpp")
     child.lua("require('soicode').compile()")
-    local messages = child.lua_get("_G.messages")
-    eq(messages, {})
+    local notifications = child.lua_get("_G.notifications")
+    eq(notifications, {})
 end
 
 T["compile()"]["should not compile"] = function()
     child.cmd("edit tests/testfiles/shouldfail.cpp")
     child.lua("require('soicode').compile()")
-    local messages = child.lua_get("_G.messages")
-    eq(#messages, 1)
+    local notifications = child.lua_get("_G.notifications")
+    eq(#notifications, 1)
 end
 
 T["compile()"]["should compile with soi header"] = function()
     child.cmd("edit tests/testfiles/addition_soi.cpp")
     child.lua("require('soicode').compile()")
-    local messages = child.lua_get("_G.messages")
-    eq(messages, {})
+    local notifications = child.lua_get("_G.notifications")
+    eq(notifications, {})
 end
 
 T["get_samples()"] = MiniTest.new_set()
@@ -216,13 +212,21 @@ Input:
 
 T["report_all()"]["runs tests correctly and writes correct text to new buffer"] = function()
     child.cmd("edit tests/testfiles/addition.cpp")
-    child.lua([[
-        require('soicode').report_all()
-    ]])
-    local windowid = child.lua_get([[vim.api.nvim_get_current_win()]])
-    local bufferid = child.lua_get("vim.api.nvim_win_get_buf(" .. windowid .. ")")
-    local lines = child.lua_get("vim.api.nvim_buf_get_lines(" .. bufferid .. ", 0, -1, false)")
+    child.lua("require('soicode').report_all()")
+    local lines = child.lua_get("vim.api.nvim_buf_get_lines(0, 0, -1, false)")
     eq(lines, addition_verdicts_output)
+end
+
+T["run_with_own_input()"] = MiniTest.new_set()
+
+T["run_with_own_input()"] = function()
+    child.cmd("edit tests/testfiles/addition.cpp")
+    child.lua("require('soicode').run_with_own_input()")
+    child.cmd('call nvim_feedkeys("i1 2\\<cr>", "n", v:false)')
+    child.lua("vim.uv.sleep(100)")
+
+    local lines = child.lua_get("vim.api.nvim_buf_get_lines(0, 0, -1, false)")
+    eq(helpers.slice(lines, 1, 2), { "1 2", "3" })
 end
 
 T["commands"] = MiniTest.new_set()
@@ -230,9 +234,7 @@ T["commands"] = MiniTest.new_set()
 T["commands"]["run"] = function()
     child.cmd("edit tests/testfiles/addition.cpp")
     child.cmd("Soi run sample.01 sample.02 sample.03 sample.04 sample.05")
-    local windowid = child.lua_get([[vim.api.nvim_get_current_win()]])
-    local bufferid = child.lua_get("vim.api.nvim_win_get_buf(" .. windowid .. ")")
-    local lines = child.lua_get("vim.api.nvim_buf_get_lines(" .. bufferid .. ", 0, -1, false)")
+    local lines = child.lua_get("vim.api.nvim_buf_get_lines(0, 0, -1, false)")
     eq(lines, addition_verdicts_output)
 end
 

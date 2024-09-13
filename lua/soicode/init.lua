@@ -132,6 +132,16 @@ function Soicode.close_floating_window()
     return M.close_floating_window()
 end
 
+---Runs the current file with your own input.
+---@usage `require("soicode").run_with_own_input()`
+function Soicode.run_with_own_input()
+    if _G.Soicode.config == nil then
+        _G.Soicode.config = require("soicode.config").options
+    end
+
+    return M.run_with_own_input()
+end
+
 -- setup Soicode options and merge them with user provided ones.
 function Soicode.setup(opts)
     _G.Soicode.config = require("soicode.config").setup(opts)

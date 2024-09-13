@@ -104,6 +104,13 @@ the floating window.
 Usage ~
 `require("soicode").close_floating_window()`
 
+------------------------------------------------------------------------------
+                                                  *Soicode.run_with_own_input()*
+                         `Soicode.run_with_own_input`()
+the current file with your own input.
+Usage ~
+`require("soicode").run_with_own_input()`
+
 
 ==============================================================================
 ------------------------------------------------------------------------------

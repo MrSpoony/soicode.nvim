@@ -136,8 +136,8 @@ PRs and issues are always welcome. Make sure to provide as much context as possi
 
 ## 📝 Todo list
 
-- [ ] Run interactive tasks (also normal tasks) with own input
-- [ ] Add neovim commands for easier access, and shortcut configuration
+- [x] Run interactive tasks (also normal tasks) with own input
+- [x] Add neovim commands for easier access, and shortcut configuration
 - [ ] Add template support
 - [x] Add soi header
 - [ ] Add stoml auto-copy feature

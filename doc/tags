@@ -8,6 +8,7 @@ Soicode.report_all()	soicode.txt	/*Soicode.report_all()*
 Soicode.report_one()	soicode.txt	/*Soicode.report_one()*
 Soicode.run_all_samples()	soicode.txt	/*Soicode.run_all_samples()*
 Soicode.run_sample()	soicode.txt	/*Soicode.run_sample()*
+Soicode.run_with_own_input()	soicode.txt	/*Soicode.run_with_own_input()*
 Soicode.setup()	soicode.txt	/*Soicode.setup()*
 Soicode.toggle_floating_window()	soicode.txt	/*Soicode.toggle_floating_window()*
 trim()	soicode.txt	/*trim()*
