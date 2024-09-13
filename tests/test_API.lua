@@ -52,15 +52,20 @@ T["setup()"]["overrides default values"] = function()
     eq_type_config(child, "debug", "boolean")
 end
 
-T["compile()"] = MiniTest.new_set()
+T["compile()"] = MiniTest.new_set({
+    hooks = {
+        pre_case = function()
+            child.lua([[
+                _G.messages = {}
+                vim.notify = function(msg, level, opts)
+                    table.insert(_G.messages, {msg=msg, level=level, opts=opts})
+                end
+            ]])
+        end,
+    },
+})
 
 T["compile()"]["should compile"] = function()
-    child.lua([[
-    _G.messages = {}
-    vim.notify = function(msg, level, opts)
-        table.insert(_G.messages, {msg=msg, level=level, opts=opts})
-    end
-    ]])
     child.cmd("edit tests/testfiles/shouldcompile.cpp")
     child.lua("require('soicode').compile()")
     local messages = child.lua_get("_G.messages")
@@ -68,16 +73,17 @@ T["compile()"]["should compile"] = function()
 end
 
 T["compile()"]["should not compile"] = function()
-    child.lua([[
-    _G.messages = {}
-    vim.notify = function(msg, level, opts)
-        table.insert(_G.messages, {msg=msg, level=level, opts=opts})
-    end
-    ]])
     child.cmd("edit tests/testfiles/shouldfail.cpp")
     child.lua("require('soicode').compile()")
     local messages = child.lua_get("_G.messages")
     eq(#messages, 1)
+end
+
+T["compile()"]["should compile with soi header"] = function()
+    child.cmd("edit tests/testfiles/addition_soi.cpp")
+    child.lua("require('soicode').compile()")
+    local messages = child.lua_get("_G.messages")
+    eq(messages, {})
 end
 
 T["get_samples()"] = MiniTest.new_set()
@@ -166,8 +172,14 @@ end
 
 T["report_all()"] = MiniTest.new_set()
 
-local addition_verdicts_output = helpers.split(
-    [[
+local function clang_or_gcc_assert()
+    if vim.uv.os_uname().sysname == "Darwin" then
+        return "Assertion failed: (false), function main, file addition.cpp, line 14.\n"
+    else
+        return "addition: tests/testfiles/addition.cpp:14: int main(): Assertion `false' failed.\n"
+    end
+end
+local addition_verdicts_output = helpers.split([[
 Sample 'sample.01' succesful!
 
 Sample 'sample.02' failed!
@@ -190,7 +202,7 @@ Sample 'sample.04' had a runtime error!
 Expected:
 7092
 Output:
-addition: tests/testfiles/addition.cpp:14: int main(): Assertion `false' failed.
+]] .. clang_or_gcc_assert() .. [[
 Input:
 6969
 123
@@ -200,9 +212,7 @@ Expected:
 543
 Input:
 420
-123]],
-    "\n"
-)
+123]], "\n")
 
 T["report_all()"]["runs tests correctly and writes correct text to new buffer"] = function()
     child.cmd("edit tests/testfiles/addition.cpp")

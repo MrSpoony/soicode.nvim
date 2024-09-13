@@ -20,7 +20,9 @@ Soicode.options = {
         "-D_GLIBCXX_DEBUG",
     },
     -- Use the soi header
-    soi_header = false,
+    soi_header = true,
+    -- Where to store additon files such as the soi header
+    additional_files_dir = vim.fn.expand("$HOME/.local/share/nvim/soicode"),
     -- Timeout for TLE in milliseconds, 0, nil, false or -1 to disable (1 day will be set as hardmax)
     timeout_ms = 1000,
     -- Timeout for code compilation in milliseconds, 0, nil, false or -1 to disable (1 day will be set as hardmax)

@@ -86,6 +86,23 @@ TODO: document
 
 Describe how to use the plugin the simplest way
 
+### SOI Header
+
+The soi header is an easy way to get started and to use some handy functions
+like `print()`, `read_int()` and the powerful `dbg()` macro.
+
+To use it, just activate the `soi_header` in the config.
+But when you use it your LSP won't know about the header.
+To fix this add a file called `.clangd` to the root of your soi files.
+Then insert the following content into this file:
+
+```yaml
+CompileFlags:
+  Add: [-std=c++20, -I/home/YOUR_PERSONAL_USER/.local/share/nvim/soicode/soiheaders/bundle/soiheader]
+```
+
+And obviously make sure to change the path prefix to match what your home or your configured soicode files.
+
 ## ⚙ Configuration
 
 TODO: document
@@ -122,7 +139,7 @@ PRs and issues are always welcome. Make sure to provide as much context as possi
 - [ ] Run interactive tasks (also normal tasks) with own input
 - [ ] Add neovim commands for easier access, and shortcut configuration
 - [ ] Add template support
-- [ ] Add soi header
+- [x] Add soi header
 - [ ] Add stoml auto-copy feature
 - [ ] Cache for compiling -> only compile when source has changed, command/flags changed or some time passed.
 - [ ] Debugging samples -> DAP configuration etc.?

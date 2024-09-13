@@ -44,9 +44,6 @@ jobs:
         run: exit $(git status --porcelain doc | wc -l | tr -d " ")
 
   tests:
-    needs: 
-      - lint
-      - documentation
     runs-on: ubuntu-latest
     timeout-minutes: 2
     strategy:

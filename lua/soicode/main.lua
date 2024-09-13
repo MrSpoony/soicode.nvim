@@ -42,15 +42,20 @@ end
 ---Compiles the current file.
 ---@private
 function Soicode.compile()
-    local compiler = require("soicode.config").options.compiler
+    local compiler = C.options.compiler
     local flags = C.options.flags
     local soi_header = C.options.soi_header
 
     local command = { compiler }
     vim.list_extend(command, flags)
     if soi_header then
+        D.log("info", "Soi header activated")
+        Soicode.ensure_soi_header()
+
+        local base_dir = C.options.additional_files_dir
+        local soiheaderdir = base_dir .. "/soiheaders/bundle/soiheader/"
+
         table.insert(command, "-I")
-        local soiheaderdir = "" -- TODO: fix this
         table.insert(command, soiheaderdir)
     end
     local file = Soicode.get_current_cpp_filepath()
@@ -499,6 +504,57 @@ function Soicode.close_floating_window()
     end
 
     S:save()
+end
+
+---Makes sure that the soi header is installed
+---@private
+function Soicode.ensure_soi_header()
+    if Soicode.has_soi_header() then
+        return
+    end
+
+    local base_dir = C.options.additional_files_dir
+    local tar_file = base_dir .. "/soiheaders.tar.xz"
+
+    -- Install soi header
+    D.log("info", "installing soi header into %s", base_dir)
+    vim.fn.mkdir(base_dir .. "/soiheaders", "p")
+
+    local output = vim.system({
+        "curl",
+        "https://blob.dolansoft.org/soicode/compilerbundle-linux-amd64-soiheaders.tar.xz",
+        "-o",
+        tar_file,
+    }, { timeout = 10000 }):wait()
+    if output.code ~= 0 then
+        vim.notify("Could not install soi header", vim.log.levels.ERROR)
+        D.log("info", "output from curl: %s", vim.inspect(output))
+    end
+
+    output = vim.system(
+        { "tar", "-xvf", tar_file, "--directory", base_dir .. "/soiheaders" },
+        { timeout = 10000 }
+    ):wait()
+    if output.code ~= 0 then
+        vim.notify("Could not install soi header", vim.log.levels.ERROR)
+        D.log("info", "output from tar: %s", vim.inspect(output))
+    end
+
+    S.has_soi_header = true
+
+    S:save()
+end
+
+---Checks if user has the soi header installed.
+---@private
+function Soicode.has_soi_header()
+    vim.print(S.has_soi_header)
+    vim.print(vim.uv.fs_stat(vim.fn.expand("$HOME/.local/share/nvim/soicode/soiheaders/bundle")))
+    if S.has_soi_header then
+        return true
+    end
+    local stat = vim.uv.fs_stat(vim.fn.expand("$HOME/.local/share/nvim/soicode/soiheaders"))
+    return stat ~= nil
 end
 
 return Soicode
